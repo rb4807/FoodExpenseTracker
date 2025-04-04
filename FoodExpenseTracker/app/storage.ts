@@ -12,7 +12,7 @@ export const mealPrices = {
 export const mealTimes = {
   breakfast: { start: 9, end: 11 },
   lunch: { start: 13, end: 15 },
-  dinner: { start: 19, end: 24 }
+  dinner: { start: 19, end: 22 }
 };
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner';

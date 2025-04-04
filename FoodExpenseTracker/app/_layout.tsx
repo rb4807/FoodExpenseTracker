@@ -51,18 +51,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={styles.tabIconContainer}>
-              <FontAwesome5 size={20} name="user" color={color} />
-              {focused && <View style={styles.activeIndicator} />}
-            </View>
-          ),
-        }}
-      />
     </Tabs>
   );
 }

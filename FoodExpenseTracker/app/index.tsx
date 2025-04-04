@@ -1,11 +1,9 @@
-import { View, Text, ScrollView, StyleSheet, Animated, Dimensions, ActivityIndicator } from 'react-native';
-import { useEffect, useState, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, Dimensions, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { MealButton } from '../components/MealButton';
-import { MealStatus } from '../components/MealStatus';
 import { DailyExpense, getTodayExpense, updateTodayExpense, checkCurrentMeal, MealType, getWeeklyExpenses, getMonthlyExpenses } from './storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import { format } from 'date-fns';
 
@@ -16,9 +14,6 @@ export default function HomeScreen() {
   const [currentMeal, setCurrentMeal] = useState<MealType | null>(null);
   const [weeklyTotal, setWeeklyTotal] = useState(0);
   const [monthlyTotal, setMonthlyTotal] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   const loadData = async () => {
     const [expense, weekly, monthly] = await Promise.all([
@@ -31,27 +26,6 @@ export default function HomeScreen() {
     setCurrentMeal(checkCurrentMeal());
     setWeeklyTotal(weekly.reduce((sum, day) => sum + day.total, 0));
     setMonthlyTotal(monthly.reduce((sum, day) => sum + day.total, 0));
-    
-    Animated.parallel([
-      Animated.spring(fadeAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      })
-    ]).start();
   };
 
   useFocusEffect(() => {
@@ -76,15 +50,15 @@ export default function HomeScreen() {
 
   if (!todayExpense) {
     return (
-      <LinearGradient
-        colors={['#0a2540', '#0f3457', '#18456f']}
-        style={styles.loadingContainer}
-      >
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient
+          colors={['#0a2540', '#0f3457', '#18456f']}
+          style={styles.loadingContainer}
+        >
           <ActivityIndicator size="large" color="#7ae7ff" />
           <Text style={styles.loadingText}>Preparing your meal dashboard...</Text>
-        </Animated.View>
-      </LinearGradient>
+        </LinearGradient>
+      </SafeAreaView>
     );
   }
 
@@ -106,153 +80,148 @@ export default function HomeScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={['#0a2540', '#0f3457', '#18456f']}
-      style={styles.container}
-    >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
+      <LinearGradient
+        colors={['#0a2540', '#0f3457', '#18456f']}
+        style={styles.container}
       >
-        <Animated.View 
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          {/* Header with greeting and wallet info */}
-          <View style={styles.headerContainer}>
-            <View style={styles.greetingRow}>
-              <View>
-                <Text style={styles.greetingText}>Hey, <Text style={styles.nameText}>Rajesh Balasubramaniam</Text></Text>
-                <Text style={styles.dateText}>{format(new Date(), 'EEEE, MMM d')}</Text>
-              </View>
-              <View style={styles.profileIcon}>
-                <Text style={styles.profileInitial}>RB</Text>
-              </View>
-            </View>
-            
-            {/* Wallet card */}
-            <Animated.View style={[styles.walletCard, { transform: [{ scale: scaleAnim }] }]}>
-              <LinearGradient
-                colors={['#18456f', '#0f3457']}
-                style={styles.walletGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.walletHeader}>
-                  <Text style={styles.walletTitle}>Today's Expense</Text>
-                  <View style={styles.chipContainer}>
-                    <Text style={styles.chipText}>STAY HEALTHY</Text>
-                  </View>
+          <View style={styles.content}>
+            {/* Header with greeting and wallet info */}
+            <View style={styles.headerContainer}>
+              <View style={styles.greetingRow}>
+                <View>
+                  <Text style={styles.greetingText}>Hey, <Text style={styles.nameText}>Rajesh Balasubramaniam</Text></Text>
+                  <Text style={styles.dateText}>{format(new Date(), 'EEEE, MMM d')}</Text>
                 </View>
-                
-                <Text style={styles.walletAmount}>{totalToday}₹</Text>
-                
-                <View style={styles.walletFooter}>
-                  <View style={styles.walletStat}>
-                    <Text style={styles.walletStatLabel}>Weekly</Text>
-                    <Text style={styles.walletStatValue}>{weeklyTotal}₹</Text>
-                  </View>
-                  <View style={styles.divider} />
-                  <View style={styles.walletStat}>
-                    <Text style={styles.walletStatLabel}>Monthly</Text>
-                    <Text style={styles.walletStatValue}>{monthlyTotal}₹</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.cardDecoration}></View>
-              </LinearGradient>
-            </Animated.View>
-          </View>
-          
-          {/* Daily meals section */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Today's Meals</Text>
-            
-            <View style={styles.mealsContainer}>
-              {['breakfast', 'lunch', 'dinner'].map((meal) => (
-                <View key={meal} style={styles.mealItem}>
-                  <View style={styles.mealIconContainer}>
-                    {getMealIcon(meal)}
-                  </View>
-                  <View style={styles.mealInfo}>
-                    <Text style={styles.mealName}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
-                    <Text style={styles.mealTime}>
-                      {meal === 'breakfast' ? '8-10 AM' : 
-                       meal === 'lunch' ? '12-2 PM' : '7-9 PM'}
-                    </Text>
-                  </View>
-                  <View style={styles.mealStatus}>
-                    {todayExpense[meal as MealType].had ? (
-                      <View style={styles.statusChipCompleted}>
-                        <FontAwesome name="check" size={14} color="#ffffff" />
-                      </View>
-                    ) : (
-                      <View style={styles.statusChipPending}>
-                        <FontAwesome name="clock-o" size={14} color="#ffffff" />
-                      </View>
-                    )}
-                    <Text style={styles.mealAmount}>{todayExpense[meal as MealType].amount}₹</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-          
-          {/* Current meal prompt */}
-          {currentMeal && !todayExpense[currentMeal].had && (
-            <View style={styles.promptContainer}>
-              <MealButton 
-                meal={currentMeal} 
-                onResponse={handleMealResponse} 
-              />
-            </View>
-          )}
-          
-          {/* Expense overview */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Expense Overview</Text>
-            
-            <View style={styles.overviewContainer}>
-              <View style={styles.overviewItem}>
-                <View style={[styles.overviewIcon, styles.todayIcon]}>
-                  <FontAwesome name="calendar-o" size={20} color="#ffffff" />
-                </View>
-                <View style={styles.overviewInfo}>
-                  <Text style={styles.overviewLabel}>Today</Text>
-                  <Text style={styles.overviewValue}>{totalToday}₹</Text>
+                <View style={styles.profileIcon}>
+                  <Text style={styles.profileInitial}>RB</Text>
                 </View>
               </View>
               
-              <View style={styles.overviewItem}>
-                <View style={[styles.overviewIcon, styles.weeklyIcon]}>
-                  <FontAwesome name="calendar" size={20} color="#ffffff" />
-                </View>
-                <View style={styles.overviewInfo}>
-                  <Text style={styles.overviewLabel}>This Week</Text>
-                  <Text style={styles.overviewValue}>{weeklyTotal}₹</Text>
-                </View>
+              {/* Wallet card */}
+              <View style={styles.walletCard}>
+                <LinearGradient
+                  colors={['#18456f', '#0f3457']}
+                  style={styles.walletGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.walletHeader}>
+                    <Text style={styles.walletTitle}>Today's Expense</Text>
+                    <View style={styles.chipContainer}>
+                      <Text style={styles.chipText}>STAY HEALTHY</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={styles.walletAmount}>{totalToday}₹</Text>
+                  
+                  <View style={styles.walletFooter}>
+                    <View style={styles.walletStat}>
+                      <Text style={styles.walletStatLabel}>Weekly</Text>
+                      <Text style={styles.walletStatValue}>{weeklyTotal}₹</Text>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.walletStat}>
+                      <Text style={styles.walletStatLabel}>Monthly</Text>
+                      <Text style={styles.walletStatValue}>{monthlyTotal}₹</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.cardDecoration}></View>
+                </LinearGradient>
               </View>
+            </View>
+            
+            {/* Daily meals section */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Today's Meals</Text>
               
-              <View style={styles.overviewItem}>
-                <View style={[styles.overviewIcon, styles.monthlyIcon]}>
-                  <FontAwesome name="calendar-check-o" size={20} color="#ffffff" />
+              <View style={styles.mealsContainer}>
+                {['breakfast', 'lunch', 'dinner'].map((meal) => (
+                  <View key={meal} style={styles.mealItem}>
+                    <View style={styles.mealIconContainer}>
+                      {getMealIcon(meal)}
+                    </View>
+                    <View style={styles.mealInfo}>
+                      <Text style={styles.mealName}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
+                      <Text style={styles.mealTime}>
+                        {meal === 'breakfast' ? '9-11 AM' : 
+                         meal === 'lunch' ? '1-3 PM' : '7-10 PM'}
+                      </Text>
+                    </View>
+                    <View style={styles.mealStatus}>
+                      {todayExpense[meal as MealType].had ? (
+                        <View style={styles.statusChipCompleted}>
+                          <FontAwesome name="check" size={14} color="#ffffff" />
+                        </View>
+                      ) : (
+                        <View style={styles.statusChipPending}>
+                          <FontAwesome name="clock-o" size={14} color="#ffffff" />
+                        </View>
+                      )}
+                      <Text style={styles.mealAmount}>{todayExpense[meal as MealType].amount}₹</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+            
+            {/* Current meal prompt */}
+            {currentMeal && !todayExpense[currentMeal].had && (
+              <View style={styles.promptContainer}>
+                <MealButton 
+                  meal={currentMeal} 
+                  onResponse={handleMealResponse} 
+                />
+              </View>
+            )}
+            
+            {/* Expense overview */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Expense Overview</Text>
+              
+              <View style={styles.overviewContainer}>
+                <View style={styles.overviewItem}>
+                  <View style={[styles.overviewIcon, styles.todayIcon]}>
+                    <FontAwesome name="calendar-o" size={20} color="#ffffff" />
+                  </View>
+                  <View style={styles.overviewInfo}>
+                    <Text style={styles.overviewLabel}>Today</Text>
+                    <Text style={styles.overviewValue}>{totalToday}₹</Text>
+                  </View>
                 </View>
-                <View style={styles.overviewInfo}>
-                  <Text style={styles.overviewLabel}>This Month</Text>
-                  <Text style={styles.overviewValue}>{monthlyTotal}₹</Text>
+                
+                <View style={styles.overviewItem}>
+                  <View style={[styles.overviewIcon, styles.weeklyIcon]}>
+                    <FontAwesome name="calendar" size={20} color="#ffffff" />
+                  </View>
+                  <View style={styles.overviewInfo}>
+                    <Text style={styles.overviewLabel}>This Week</Text>
+                    <Text style={styles.overviewValue}>{weeklyTotal}₹</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.overviewItem}>
+                  <View style={[styles.overviewIcon, styles.monthlyIcon]}>
+                    <FontAwesome name="calendar-check-o" size={20} color="#ffffff" />
+                  </View>
+                  <View style={styles.overviewInfo}>
+                    <Text style={styles.overviewLabel}>This Month</Text>
+                    <Text style={styles.overviewValue}>{monthlyTotal}₹</Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
-        </Animated.View>
-      </ScrollView>
-    </LinearGradient>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
@@ -405,13 +374,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 12,
-  },
-  mealItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   mealItem: {
     flexDirection: 'row',
