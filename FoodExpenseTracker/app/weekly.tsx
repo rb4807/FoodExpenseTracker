@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { getWeeklyExpenses, PeriodExpense } from './storage';
+import { getWeeklyExpenses, PeriodExpense } from '../storage';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, FontAwesome } from '@expo/vector-icons';

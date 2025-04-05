@@ -2,7 +2,7 @@ import { View, Text, ScrollView, StyleSheet, Dimensions, ActivityIndicator, Safe
 import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { MealButton } from '../components/MealButton';
-import { DailyExpense, getTodayExpense, updateTodayExpense, checkCurrentMeal, MealType, getWeeklyExpenses, getMonthlyExpenses } from './storage';
+import { DailyExpense, getTodayExpense, updateTodayExpense, checkCurrentMeal, MealType, getWeeklyExpenses, getMonthlyExpenses } from '../storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import { format } from 'date-fns';

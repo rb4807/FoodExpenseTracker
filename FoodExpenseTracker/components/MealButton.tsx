@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
-import { MealType } from '../app/storage';
+import { MealType } from '../storage';
 
 interface MealButtonProps {
   meal: MealType;

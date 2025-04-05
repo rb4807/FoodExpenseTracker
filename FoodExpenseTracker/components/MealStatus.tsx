@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { MealType } from '../app/storage';
+import { MealType } from '../storage';
 
 interface MealStatusProps {
   meal: MealType;
