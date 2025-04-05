@@ -1,15 +1,19 @@
-import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { getWeeklyExpenses, PeriodExpense } from '../storage';
+import { getWeeklyExpenses, PeriodExpense, updateTodayExpense, MealType, DailyExpense, getTodayExpense } from '../storage';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, FontAwesome } from '@expo/vector-icons';
+import { MealEditModal } from '../components/MealEditModel';
 
 const { width } = Dimensions.get('window');
 
 export default function WeeklyScreen() {
   const [weeklyExpenses, setWeeklyExpenses] = useState<PeriodExpense[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<DailyExpense | null>(null);
+  const [selectedMeal, setSelectedMeal] = useState<MealType>('breakfast');
 
   const loadData = async () => {
     const expenses = await getWeeklyExpenses();
@@ -26,6 +30,20 @@ export default function WeeklyScreen() {
   });
 
   const totalWeek = weeklyExpenses.reduce((sum, day) => sum + day.total, 0);
+
+  const handleDayPress = async (date: Date) => {
+    // Try to get the day's expense data
+    const dayExpense = await getTodayExpense(date.toISOString());
+    setSelectedDay(dayExpense);
+    setModalVisible(true);
+  };
+
+  const handleMealResponse = async (meal: MealType, hadMeal: boolean) => {
+    if (selectedDay) {
+      const updatedExpense = await updateTodayExpense(meal, hadMeal, new Date(selectedDay.date));
+      await loadData(); // Refresh the weekly data
+    }
+  };
 
   return (
     <LinearGradient
@@ -70,7 +88,11 @@ export default function WeeklyScreen() {
             
             <View style={styles.expensesContainer}>
               {weeklyExpenses.map((day, index) => (
-                <View key={index} style={styles.dayItem}>
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.dayItem}
+                  onPress={() => handleDayPress(new Date(day.date))}
+                >
                   <View style={styles.dayIconContainer}>
                     <FontAwesome name="calendar-o" size={20} color="#ffffff" />
                   </View>
@@ -82,12 +104,26 @@ export default function WeeklyScreen() {
                     <Text style={styles.amountText}>{day.total}₹</Text>
                     <FontAwesome5 name="angle-right" size={16} color="#94a3b8" />
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
         </View>
       </ScrollView>
+
+      {/* Meal Edit Modal */}
+      <MealEditModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSave={handleMealResponse}
+        mealData={selectedDay || {
+          breakfast: { had: false, amount: 0 },
+          lunch: { had: false, amount: 0 },
+          dinner: { had: false, amount: 0 },
+          date: new Date().toISOString()
+        }}
+        selectedMeal={selectedMeal}
+      />
     </LinearGradient>
   );
 }

@@ -114,7 +114,6 @@ export default function MonthlyScreen() {
                   </View>
                   <View style={styles.amountContainer}>
                     <Text style={styles.amountText}>{week.total}₹</Text>
-                    <FontAwesome5 name="angle-right" size={16} color="#94a3b8" />
                   </View>
                 </View>
               ))}

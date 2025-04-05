@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, StyleSheet, Dimensions, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, ActivityIndicator, SafeAreaView, StatusBar, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { MealButton } from '../components/MealButton';
+import { MealEditModal } from '../components/MealEditModel';
 import { DailyExpense, getTodayExpense, updateTodayExpense, checkCurrentMeal, MealType, getWeeklyExpenses, getMonthlyExpenses } from '../storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
@@ -14,6 +15,8 @@ export default function HomeScreen() {
   const [currentMeal, setCurrentMeal] = useState<MealType | null>(null);
   const [weeklyTotal, setWeeklyTotal] = useState(0);
   const [monthlyTotal, setMonthlyTotal] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState<MealType>('breakfast');
 
   const loadData = async () => {
     const [expense, weekly, monthly] = await Promise.all([
@@ -40,12 +43,21 @@ export default function HomeScreen() {
   const handleMealResponse = async (meal: MealType, hadMeal: boolean) => {
     const updatedExpense = await updateTodayExpense(meal, hadMeal);
     setTodayExpense(updatedExpense);
+    await updateTotals();
+  };
+
+  const updateTotals = async () => {
     const [weekly, monthly] = await Promise.all([
       getWeeklyExpenses(),
       getMonthlyExpenses()
     ]);
     setWeeklyTotal(weekly.reduce((sum, day) => sum + day.total, 0));
     setMonthlyTotal(monthly.reduce((sum, day) => sum + day.total, 0));
+  };
+
+  const openEditModal = (meal: MealType) => {
+    setSelectedMeal(meal);
+    setModalVisible(true);
   };
 
   if (!todayExpense) {
@@ -144,7 +156,11 @@ export default function HomeScreen() {
               
               <View style={styles.mealsContainer}>
                 {['breakfast', 'lunch', 'dinner'].map((meal) => (
-                  <View key={meal} style={styles.mealItem}>
+                  <TouchableOpacity 
+                    key={meal} 
+                    style={styles.mealItem}
+                    onPress={() => openEditModal(meal as MealType)}
+                  >
                     <View style={styles.mealIconContainer}>
                       {getMealIcon(meal)}
                     </View>
@@ -165,9 +181,12 @@ export default function HomeScreen() {
                           <FontAwesome name="clock-o" size={14} color="#ffffff" />
                         </View>
                       )}
-                      <Text style={styles.mealAmount}>{todayExpense[meal as MealType].amount}₹</Text>
+                      <View style={styles.amountContainer}>
+                        <Text style={styles.mealAmount}>{todayExpense[meal as MealType].amount}₹</Text>
+                        <FontAwesome5 name="angle-right" size={16} color="#94a3b8" />
+                      </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -220,6 +239,15 @@ export default function HomeScreen() {
             </View>
           </View>
         </ScrollView>
+        
+        {/* Meal Edit Modal */}
+        <MealEditModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSave={handleMealResponse}
+          mealData={todayExpense}
+          selectedMeal={selectedMeal}
+        />
       </LinearGradient>
     </SafeAreaView>
   );
@@ -424,6 +452,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   mealAmount: {
     color: '#ffffff',

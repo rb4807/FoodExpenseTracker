@@ -52,19 +52,30 @@ export const saveExpenses = async (expenses: DailyExpense[]): Promise<void> => {
   }
 };
 
-export const getTodayExpense = async (): Promise<DailyExpense> => {
+export const getTodayExpense = async (dateString?: string): Promise<DailyExpense> => {
+  const date = dateString ? parseISO(dateString) : new Date();
   const expenses = await loadExpenses();
-  return expenses.find(exp => isToday(parseISO(exp.date))) || {
+  
+  return expenses.find(exp => {
+    const expDate = parseISO(exp.date);
+    return expDate.getDate() === date.getDate() && 
+           expDate.getMonth() === date.getMonth() && 
+           expDate.getFullYear() === date.getFullYear();
+  }) || {
     breakfast: { had: false, amount: 0 },
     lunch: { had: false, amount: 0 },
     dinner: { had: false, amount: 0 },
-    date: new Date().toISOString()
+    date: date.toISOString()
   };
 };
 
-export const updateTodayExpense = async (meal: MealType, hadMeal: boolean): Promise<DailyExpense> => {
+export const updateTodayExpense = async (
+  meal: MealType, 
+  hadMeal: boolean, 
+  date: Date = new Date()
+): Promise<DailyExpense> => {
   const expenses = await loadExpenses();
-  let todayExpense = await getTodayExpense();
+  let todayExpense = await getTodayExpense(date.toISOString());
   
   // Update the meal data
   todayExpense = {
@@ -72,11 +83,17 @@ export const updateTodayExpense = async (meal: MealType, hadMeal: boolean): Prom
     [meal]: {
       had: hadMeal,
       amount: hadMeal ? mealPrices[meal] : 0
-    }
+    },
+    date: date.toISOString()
   };
   
-  // Remove today's expense if it exists
-  const filteredExpenses = expenses.filter(exp => !isToday(parseISO(exp.date)));
+  // Remove the existing expense for this date if it exists
+  const filteredExpenses = expenses.filter(exp => {
+    const expDate = parseISO(exp.date);
+    return !(expDate.getDate() === date.getDate() && 
+             expDate.getMonth() === date.getMonth() && 
+             expDate.getFullYear() === date.getFullYear());
+  });
   
   // Add updated today's expense
   const updatedExpenses = [...filteredExpenses, todayExpense];
