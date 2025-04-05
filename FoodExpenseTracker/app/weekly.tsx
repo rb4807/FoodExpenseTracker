@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, Animated, Dimensions } from 'react-native';
-import { useState, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { getWeeklyExpenses, PeriodExpense } from './storage';
 import { format } from 'date-fns';
@@ -10,9 +10,6 @@ const { width } = Dimensions.get('window');
 
 export default function WeeklyScreen() {
   const [weeklyExpenses, setWeeklyExpenses] = useState<PeriodExpense[]>([]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   const loadData = async () => {
     const expenses = await getWeeklyExpenses();
@@ -22,27 +19,6 @@ export default function WeeklyScreen() {
       return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 is Monday, 5 is Friday
     });
     setWeeklyExpenses(weekdayExpenses);
-    
-    Animated.parallel([
-      Animated.spring(fadeAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      })
-    ]).start();
   };
 
   useFocusEffect(() => {
@@ -61,21 +37,13 @@ export default function WeeklyScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View 
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
+        <View style={styles.content}>
           {/* Header */}
           <View style={styles.headerContainer}>
             <Text style={styles.headerTitle}>Weekly Summary</Text>
             
             {/* Weekly Total Card */}
-            <Animated.View style={[styles.walletCard, { transform: [{ scale: scaleAnim }] }]}>
+            <View style={styles.walletCard}>
               <LinearGradient
                 colors={['#18456f', '#0f3457']}
                 style={styles.walletGradient}
@@ -93,7 +61,7 @@ export default function WeeklyScreen() {
                 
                 <View style={styles.cardDecoration}></View>
               </LinearGradient>
-            </Animated.View>
+            </View>
           </View>
           
           {/* Weekly expenses list */}
@@ -118,9 +86,7 @@ export default function WeeklyScreen() {
               ))}
             </View>
           </View>
-          
-          
-        </Animated.View>
+        </View>
       </ScrollView>
     </LinearGradient>
   );

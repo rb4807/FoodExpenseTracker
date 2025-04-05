@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, Animated, Dimensions } from 'react-native';
-import { useState, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { getMonthlyExpenses, PeriodExpense } from './storage';
 import { format, startOfMonth, endOfMonth, eachWeekOfInterval, startOfWeek, endOfWeek } from 'date-fns';
@@ -17,9 +17,6 @@ interface WeekExpense {
 export default function MonthlyScreen() {
   const [monthlyExpenses, setMonthlyExpenses] = useState<PeriodExpense[]>([]);
   const [weeklyBreakdown, setWeeklyBreakdown] = useState<WeekExpense[]>([]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   const loadData = async () => {
     const expenses = await getMonthlyExpenses();
@@ -54,27 +51,6 @@ export default function MonthlyScreen() {
     });
     
     setWeeklyBreakdown(weekBreakdown);
-    
-    Animated.parallel([
-      Animated.spring(fadeAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 10,
-        bounciness: 8
-      })
-    ]).start();
   };
 
   useFocusEffect(() => {
@@ -93,21 +69,13 @@ export default function MonthlyScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View 
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
+        <View style={styles.content}>
           {/* Header */}
           <View style={styles.headerContainer}>
             <Text style={styles.headerTitle}>Monthly Summary</Text>
             
             {/* Monthly Total Card */}
-            <Animated.View style={[styles.walletCard, { transform: [{ scale: scaleAnim }] }]}>
+            <View style={styles.walletCard}>
               <LinearGradient
                 colors={['#18456f', '#0f3457']}
                 style={styles.walletGradient}
@@ -125,7 +93,7 @@ export default function MonthlyScreen() {
                 
                 <View style={styles.cardDecoration}></View>
               </LinearGradient>
-            </Animated.View>
+            </View>
           </View>
           
           {/* Weekly breakdown list */}
@@ -153,7 +121,7 @@ export default function MonthlyScreen() {
             </View>
           </View>
           
-        </Animated.View>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
